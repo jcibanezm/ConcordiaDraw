@@ -51,6 +51,9 @@ ratio75, error75, ratio68, error68, rho = np.loadtxt("Sircombe.txt", delimiter='
 number_spots = len(ratio75) #Count number of analyses
 
 agearray, conc68array, conc75array, conc67array = CC.StartConcordiaLine(ratio68, error68, ratio75, error75, sigma)
+agelabelarray, labels68, labels75, labels67     = CC.AddConcordiaLabels(agearray, old_concordia=True)
+
+print("Agelabelarray", agelabelarray)
 
 #Start plotting the figure
 fig = plt.figure(figsize=(12, 8.5))
@@ -61,7 +64,6 @@ for i in range(number_spots):
     # I need to revisit the ellipse plotting algorithm because of the difference range of the axes.
     PE.plot_ellipse(semimaj=error75[i], semimin=error68[i],phi=rho[i], ax=ax, x_cent=ratio75[i], y_cent=ratio68[i], plot_kwargs=plot_kwargs)
 
-CC.AddConcordiaLabels(agearray, old_concordia=True, ax=ax)
 
 fig.savefig("test_oldConcordia.pdf", format="pdf")
 

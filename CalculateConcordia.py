@@ -129,7 +129,7 @@ def StartConcordiaLine(ratio68, error68, ratio75, error75, sigma, numConcSteps=4
 
     return agearray, conc68array, conc75array, conc67array
 
-def AddConcordiaLabels(agearray, old_concordia=False, axislog=False, ax=None, data_out=False):
+def AddConcordiaLabels(agearray, old_concordia=False, axislog=False):
     """
     Add the labels to the concordia line depending on the range covered by the age array.
     Whether we plot the old or the new concordia in linear or logarithmic axis
@@ -146,11 +146,8 @@ def AddConcordiaLabels(agearray, old_concordia=False, axislog=False, ax=None, da
     axislog : boolean
         what is the scale of the plot axis, linear or logarithmic.
 
-    ax : matplotlib axis property
-        A pre-created matplotlib axis
-
-    data_out : boolean
-        A flag to return the axis labels array.
+    return:
+        agelabelarray, labels68, labels67, labels75
     """
 
     agestart = agearray[0]
@@ -188,13 +185,16 @@ def AddConcordiaLabels(agearray, old_concordia=False, axislog=False, ax=None, da
     agelabelarray         = int(agestart/100.)*100+AgeLabelStep*np.arange(PlotLabelsRange)+1e-10
 	agelabelarray_logaxes = int(agestart/100.)*100+AgeLabelStep_logaxes*np.arange(PlotLabelsRange)+1e-10
 
+    labels68        = np.exp(lambda238*agelabelarray)-1
+	labels67        = (U85)*((np.exp(lambda238*agelabelarray)-1)/(np.exp(lambda235*agelabelarray)-1))
+	labels68logaxes = np.exp(lambda238*agelabelarray_logaxes)-1
+	labels75logaxes = np.exp(lambda235*agelabelarray_logaxes)-1
+	labels67logaxes = (U85)*((np.exp(lambda238*agelabelarray_logaxes[i])-1)/(np.exp(lambda235*agelabelarray_logaxes)-1))
 
-    for i in range(PlotLabelsRange):	# ------------- Calculates isotope ratio data array for concordia
-    	labels68[i]=math.exp(lambda238*agelabelarray[i])-1
-    	labels75[i]=math.exp(lambda235*agelabelarray[i])-1
-    	labels67[i]=(U85)*((math.exp(lambda238*agelabelarray[i])-1)/(math.exp(lambda235*agelabelarray[i])-1))
-    	labels68logaxes[i]=math.exp(lambda238*agelabelarray_logaxes[i])-1
-    	labels75logaxes[i]=math.exp(lambda235*agelabelarray_logaxes[i])-1
-    	labels67logaxes[i]=(U85)*((math.exp(lambda238*agelabelarray_logaxes[i])-1)/(math.exp(lambda235*agelabelarray_logaxes[i])-1))
+    if axislog:
+        agelabelarray = agelabelarray_logaxes
+        labels68      = labels68logaxes
+        labels67      = labels67logaxes
+        labels75      = labels75logaxes
 
-    ax.blablabla
+    return agelabelarray, labels68, labels75, labels67
