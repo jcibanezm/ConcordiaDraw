@@ -1,13 +1,12 @@
 """
 Plotting ellipses in pyhon.
-Code by: Nicholas Kern February, 2016
+Code by: Nicholas Kern, February 2016
 https://casper.berkeley.edu/astrobaki/index.php/Plotting_Ellipses_in_Python
 """
 
 import numpy as np
 from scipy.stats import chi2
 import matplotlib.pyplot as plt
-#import pylab as mp
 
 def plot_ellipse(semimaj=1,semimin=1,phi=0,x_cent=0,y_cent=0,theta_num=1e3,ax=None,plot_kwargs=None,\
                     fill=False,fill_kwargs=None,data_out=False,cov=None,mass_level=0.68):

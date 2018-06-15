@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import sys
 
 # Decaying constants.
 lambda235 = 9.8485E-4
@@ -68,6 +69,53 @@ def F(xx, yy, xmu, ymu, xerr, yerr, rho):	#Define function for the 2-d bivariate
     c = ((xx - xmu)/xerr)**2. - 2.*rho*(((xx - xmu)*(yy - ymu))/(xerr*yerr))+((yy - ymu)/yerr)**2
     return a*np.exp(b*c)
 
+
+def TestInputParameters(dictD, memory=False, ratio68=None, error68=None, ratio75=None, error75=None, sigma=None):
+    """
+    This function tests the input data and output directory to see if they exist.
+    If they don't. print a Warning on screen and kill the code.
+    """
+    if memory == False:
+        try:
+           fn=open(dictD["in"],"r")
+        except IOError:
+           print("")
+           print("\tError: the file %s does not appear to exist."%dictD["in"])
+           print("\tCheck that you have the correct 'data_dir' and 'input_data' in the 'concordia_input_parameters.txt' file")
+           print("")
+           sys.exit()
+    else:
+        max_values75 = ratio75 + (sigma+0.01) * error75
+        min_values75 = ratio75 - (sigma+0.01) * error75
+        max_limit75  = np.amax(max_values75)
+        min_limit75  = np.amin(min_values75)
+        max_values68 = ratio68 + (sigma+0.05) * error68
+        min_values68 = ratio68 - (sigma+0.05) * error68
+        max_limit68  = np.amax(max_values68)
+        min_limit68  = np.amin(min_values68)
+        minxstep = 2*sigma*np.min(error75)/dictD["res"]	#Calculate the minimum step size necessary for the entire grid based on the most precise analysis
+        minystep = 2*sigma*np.min(error68)/dictD["res"]
+        xsteps_finalgrid = int((max_limit75 - min_limit75)/minxstep) #int((ratio75end - ratio75start)/minxstep)	#Calculate total number of steps for the final grid
+        ysteps_finalgrid = int((max_limit68 - min_limit68)/minystep)
+
+        entry = float(1.0)
+        cells = xsteps_finalgrid*ysteps_finalgrid
+        X_mem = cells*sys.getsizeof(entry)/1.0e6
+
+        total_memory = 3*X_mem
+
+        print ("")
+        print (' ====================================================================')
+        print ('                        Memory usage of the calculation:')
+        print ('')
+        print ('	Total Memory required (MB) = %.1f'%(total_memory))
+        print (' ====================================================================')
+        print ('')
+
+        # Ask the system what is my available RAM. If I'm using more than half, ask if
+        # I really want to run with this resolution.
+
+    return 0
 
 def StartConcordiaLine(ratio68, error68, ratio75, error75, sigma, numConcSteps=450):
     """
@@ -202,10 +250,10 @@ def ComputeConcordiaLabels(agearray, old_concordia=False, axislog=False):
     return agelabelarray, labels68, labels75, labels67
 
 def initialize(X, Y):
-	a = X*0 + Y*0 - 0.0001
-	return a
+    a = X*0 + Y*0 - 0.0001
+    return a
 
-def ComputePDF(ratio75, error75, ratio68, error68, rho, PDFres=10, sigma=4):
+def ComputePDF(ratio75, error75, ratio68, error68, rho, PDFres=10, sigma=4, log_axes=False):
     """
     Add Documentation.
     """
@@ -243,13 +291,13 @@ def ComputePDF(ratio75, error75, ratio68, error68, rho, PDFres=10, sigma=4):
 
     print ('')
     print ('---------------------------------------------------------------------')
-    print ('Properties for the Global grid.')
+    print ('Properties of the Global grid.')
     print ('')
     print ('	Age Start	%.2f Myr'%agestart)
     print ('	Age End		%.2f Myr'%ageend)
     print ('')
     print ('	Min 207/235	%.2g Max 207/235  %.2g	'%(min_limit75, max_limit75))
-    #print ('	Step-size	%.2f '%minxstep)  # steps	', xsteps_finalgrid
+    print ('	Step-size	%.2f # steps %i'%(minxstep, xsteps_finalgrid))
     print ('')
     print ('	Min 206/238   %.2g	 Max 206/238	%.2g'%(min_limit68, max_limit68))
     print ('	Step-size	%.2g   # steps	%i'%(minystep, ysteps_finalgrid))
@@ -260,10 +308,15 @@ def ComputePDF(ratio75, error75, ratio68, error68, rho, PDFres=10, sigma=4):
 
     # Do I want to have a different grid for logarithmic axis.
     #print 'Generate general array'
-    x_finalgrid = np.linspace(min_limit75, max_limit75, xsteps_finalgrid, endpoint=True)	#Create arrays for X and Y for the final grid
-    y_finalgrid = np.linspace(max_limit68, min_limit68, ysteps_finalgrid, endpoint=True)
-    X, Y 		= np.meshgrid(x_finalgrid, y_finalgrid)	#Create final grid (individual analyses will be added to this one)
+    if log_axes == False:
+        x_finalgrid = np.linspace(min_limit75, max_limit75, xsteps_finalgrid, endpoint=True)	#Create arrays for X and Y for the final grid
+        y_finalgrid = np.linspace(max_limit68, min_limit68, ysteps_finalgrid, endpoint=True)
+    else:
+        x_finalgrid = np.logspace(np.log10(min_limit75), np.log10(max_limit75), xsteps_finalgrid, endpoint=True)	#Create arrays for X and Y for the final grid
+        y_finalgrid = np.logspace(np.log10(max_limit68), np.log10(min_limit68), ysteps_finalgrid, endpoint=True)
 
+    # Create the basegrid for the calculations.
+    X, Y 		= np.meshgrid(x_finalgrid, y_finalgrid)	#Create final grid (individual analyses will be added to this one)
     concordiaPDF = initialize(X, Y)
 
     for i in range(number_spots):
@@ -292,9 +345,9 @@ def CalculateMemoryUsage(X, Y):
     print ('')
     #print '	Size of 1D x final grid ', xsteps_mem
     #print '	Size of 1D y final grid ', ysteps_mem
-    print ('	Size of 2D X, Y Grids 	', X_mem,',', Y_mem)
-    print ('	Size of the Final PDF	', PDF_mem)
+    print ('	Size of 2D X = %.1g, Y =  %.1g grid'%(X_mem,Y_mem))
+    print ('	Size of the Final PDF %.2g	'%PDF_mem)
     #print '	Total Memory used (MB) =', xsteps_mem+ysteps_mem+2*X_mem+PDF_mem
-    print ('	Total Memory used (MB) =', 2*X_mem+PDF_mem)
+    print ('	Total Memory used (MB) = %.1f'%(2*X_mem+PDF_mem))
     print (' ====================================================================')
     print ('')

@@ -1,0 +1,14 @@
+# Input parameters for concordia draw.
+
+output  = '2D'
+PDFres  = 10
+
+log_axes = True
+log_contour = False
+old_concordia = False
+
+data_dir = '/Users/juan/Dropbox/codes/Geochronology/concordia_draw/Data'
+input_data = 'CP40conc_4_PDF.txt'
+
+out_dir  = '/Users/juan/Dropbox/codes/Geochronology/concordia_draw/Output'
+figure_name = 'Conc_95_test'
